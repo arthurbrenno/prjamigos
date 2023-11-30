@@ -23,6 +23,7 @@ import com.example.prjcruddreco.databinding.ActivityMainBinding;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,9 +42,9 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
 
-//        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-//        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        //        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        //        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+        //        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
@@ -54,8 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button btnCancelar = findViewById(R.id.btnCancelar);
         btnCancelar.setOnClickListener(view -> {
-            Snackbar.make(view, "Cancelando...", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            Snackbar.make(view, "Cancelando...", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             findViewById(R.id.include_listagem).setVisibility(View.VISIBLE);
             findViewById(R.id.include_cadastro).setVisibility(View.INVISIBLE);
             findViewById(R.id.fab).setVisibility(View.VISIBLE);
@@ -63,53 +63,68 @@ public class MainActivity extends AppCompatActivity {
 
         Button btnSalvar = findViewById(R.id.btnSalvar);
         btnSalvar.setOnClickListener(view -> {
-            Snackbar.make(view, "Salvando...", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-            findViewById(R.id.include_listagem).setVisibility(View.VISIBLE);
-            findViewById(R.id.include_cadastro).setVisibility(View.INVISIBLE);
-            findViewById(R.id.fab).setVisibility(View.VISIBLE);
-        });
+            // Sincronizando os campos com o contexto
+            EditText edtNome = (EditText) findViewById(R.id.edtNome);
+            EditText edtCelular = (EditText) findViewById(R.id.edtCelular);
 
-        configurarRecycler();
-    }
+            // Adaptando atributos
+            String nome = edtNome.getText().toString();
+            String celular = edtCelular.getText().toString();
+            int situacao = 1;
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+            // Gravando no banco de dados
+            DbAmigosDAO dao = new DbAmigosDAO((View.OnClickListener) getBaseContext());
+            boolean sucesso = dao.salvar(nome, celular, situacao);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+            if (sucesso) {
+                Snackbar.make(view, "Dados de [" + nome + "] salvos com sucesso!", Snackbar.LENGTH_LONG)
+                        .setAction("Ação", null).show();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+                // Inicializando os campos do contexto
+                edtNome.setText("");
+                edtCelular.setText("");
+                findViewById(R.id.include_listagem).setVisibility(View.VISIBLE);
+                findViewById(R.id.include_cadastro).setVisibility(View.INVISIBLE);
+                findViewById(R.id.fab).setVisibility(View.VISIBLE);
+            } else {
+                Snackbar.make(view, "Erro ao salvar, consulte o log!", Snackbar.LENGTH_LONG).setAction("Ação", null).show();
+            }
+            });
+        }
+
+        @Override
+        public boolean onCreateOptionsMenu(Menu menu) {
+            // Inflate the menu; this adds items to the action bar if it is present.
+            getMenuInflater().inflate(R.menu.menu_main, menu);
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        @Override public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+
+            //noinspection SimplifiableIfStatement
+            if (id == R.id.action_settings) {
+                return true;
+            }
+
+            return super.onOptionsItemSelected(item);
+        }
+
+        private void configurarRecycler() {
+            recyclerView = findViewById(R.id.recyclerView);
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+            recyclerView.setLayoutManager(linearLayoutManager);
+
+            DbAmigosDAO dao = new DbAmigosDAO((View.OnClickListener) this);
+            adapter = new DbAmigosAdapter(dao.listarAmigos());
+            recyclerView.setAdapter(adapter);
+            recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        }
+
+        //    @Override
+        //    public boolean onSupportNavigateUp() {
+        //        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        //        return NavigationUI.navigateUp(navController, appBarConfiguration)
+        //                || super.onSupportNavigateUp();
+        //    }
     }
-
-    private void configurarRecycler() {
-        recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-
-        DbAmigosDAO dao = new DbAmigosDAO(this);
-        adapter = new DbAmigosAdapter(dao.listarAmigos());
-        recyclerView.setAdapter(adapter);
-        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-    }
-
-//    @Override
-//    public boolean onSupportNavigateUp() {
-//        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-//        return NavigationUI.navigateUp(navController, appBarConfiguration)
-//                || super.onSupportNavigateUp();
-//    }
-}

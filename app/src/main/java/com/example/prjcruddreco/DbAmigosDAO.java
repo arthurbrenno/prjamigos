@@ -3,6 +3,7 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +12,8 @@ public class DbAmigosDAO {
     private final String TABLE_AMIGOS = "Amigos";
     private DbAmigosGateway gateway;
 
-    public DbAmigosDAO(Context context) {
-        this.gateway = DbAmigosGateway.getInstance(context);
+    public DbAmigosDAO(View.OnClickListener context) {
+        this.gateway = DbAmigosGateway.getInstance((Context) context);
     }
 
     public boolean salvar(String nome, String celular, int status) {
